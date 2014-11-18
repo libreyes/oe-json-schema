@@ -4,7 +4,9 @@ import java.lang.Class
 import java.net.URI
 import org.json4s.JsonAST._
 
-case class Schema(
+trait Schema
+
+case class DraftV4Schema(
   coreAttributes: CoreAttributes = CoreAttributes(),
   numericValidation: NumericValidation = NumericValidation(),
   stringValidation: StringValidation = StringValidation(),
@@ -12,7 +14,7 @@ case class Schema(
   objectValidation: ObjectValidation = ObjectValidation(),
   generalValidation: GeneralValidation = GeneralValidation(),
   metadata: Metadata = Metadata()
-)
+) extends Schema
 
 case class CoreAttributes(
   $schema: Option[URI] = None,

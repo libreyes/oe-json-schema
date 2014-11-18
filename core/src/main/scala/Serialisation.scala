@@ -6,6 +6,7 @@ import org.json4s._
 object Serialisation {
   lazy val Serialisers = Seq(
     SchemaSerialiser,
+    DraftV4Serialiser,
     AdditionalItemsSerialiser,
     ItemsSerialiser,
     AdditionalPropertiesSerialiser,
@@ -21,9 +22,14 @@ object Serialisation {
 }
 
 object SchemaSerialiser extends CustomSerializer[Schema](implicit formats => (
+  { case json: JObject => json.extract[DraftV4Schema] },
+  PartialFunction.empty
+))
+
+object DraftV4Serialiser extends CustomSerializer[DraftV4Schema](implicit formats => (
   {
-    case json: JValue => {
-      Schema(
+    case json: JObject => {
+      DraftV4Schema(
         json.extract[CoreAttributes],
         json.extract[NumericValidation],
         json.extract[StringValidation],
@@ -35,7 +41,7 @@ object SchemaSerialiser extends CustomSerializer[Schema](implicit formats => (
     }
   },
   {
-    case schema: Schema => {
+    case schema: DraftV4Schema => {
       Extraction.decompose(schema.coreAttributes) merge
       Extraction.decompose(schema.numericValidation) merge
       Extraction.decompose(schema.stringValidation) merge

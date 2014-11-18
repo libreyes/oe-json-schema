@@ -21,9 +21,9 @@ object SchemaGen {
       objectValidation <- genObjectValidation
       generalValidation <- genGeneralValidation
       metadata <- genMetadata
-    } yield Schema(coreAttributes, numericValidation, stringValidation, arrayValidation, objectValidation, generalValidation, metadata)
+    } yield DraftV4Schema(coreAttributes, numericValidation, stringValidation, arrayValidation, objectValidation, generalValidation, metadata)
 
-    lazy val empty = const(Schema())
+    lazy val empty = const(DraftV4Schema())
 
     level match {
       case 0 => nonEmpty
