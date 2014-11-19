@@ -5,7 +5,6 @@ import org.json4s._
 
 object Serialisation {
   lazy val Serialisers = Seq(
-    SchemaSerialiser,
     DraftV4Serialiser,
     AdditionalItemsSerialiser,
     ItemsSerialiser,
@@ -16,10 +15,12 @@ object Serialisation {
     URISerialiser
   )
 
-  implicit lazy val Formats = new DefaultFormats {
+  lazy val BaseFormats = new DefaultFormats {
     override val wantsBigDecimal = true
     override val strict = true
   } ++ Serialisers + GeneralValidationSerialiser
+
+  implicit lazy val Formats = BaseFormats + SchemaSerialiser
 }
 
 object SchemaSerialiser extends CustomSerializer[Schema](implicit formats => (
