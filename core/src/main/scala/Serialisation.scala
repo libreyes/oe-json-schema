@@ -19,7 +19,7 @@ object Serialisation {
   implicit lazy val Formats = new DefaultFormats {
     override val wantsBigDecimal = true
     override val strict = true
-  } ++ Serialisers
+  } ++ Serialisers + GeneralValidationSerialiser
 }
 
 object SchemaSerialiser extends CustomSerializer[Schema](implicit formats => (
@@ -143,3 +143,8 @@ object URISerialiser extends CustomSerializer[URI](formats => (
   { case JString(str) => new URI(str) },
   { case uri: URI => new JString(uri.toString) }
 ))
+
+object GeneralValidationSerialiser extends FieldSerializer[GeneralValidation](
+  FieldSerializer.renameTo("types", "type"),
+  FieldSerializer.renameFrom("type", "types")
+)
