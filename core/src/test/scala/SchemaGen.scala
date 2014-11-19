@@ -77,7 +77,7 @@ object SchemaGen {
   def genGeneralValidation(implicit arbSchema: Arbitrary[Schema]) = {
     for {
       enum <- unlikelyOption(resize(8, nonEmptyListOf(genJValue)))
-      t <- unlikelyOption(someOf(TArray, TBoolean, TInteger, TNumber, TNull, TObject, TString))
+      t <- unlikelyOption(someOf(TArray, TBoolean, TInteger, TNumber, TNull, TObject, TString).map(t => Types(t.toSet)))
       allOf <- unlikelyOption(resize(4, nonEmptyListOf(arbitrary[Schema])))
       anyOf <- unlikelyOption(resize(4, nonEmptyListOf(arbitrary[Schema])))
       oneOf <- unlikelyOption(resize(4, nonEmptyListOf(arbitrary[Schema])))

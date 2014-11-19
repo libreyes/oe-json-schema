@@ -79,9 +79,11 @@ case object TNull extends Type
 case object TObject extends Type
 case object TString extends Type
 
+case class Types(types: Set[Type])
+
 case class GeneralValidation(
   enum: Option[Seq[JValueWrapper]] = None,
-  `type`: Option[Seq[Type]] = None,
+  `type`: Option[Types] = None,
   allOf: Option[Seq[Schema]] = None,
   anyOf: Option[Seq[Schema]] = None,
   oneOf: Option[Seq[Schema]] = None,

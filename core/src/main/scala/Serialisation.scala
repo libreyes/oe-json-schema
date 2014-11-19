@@ -11,6 +11,7 @@ object Serialisation {
     ItemsSerialiser,
     AdditionalPropertiesSerialiser,
     DependencySerialiser,
+    TypesSerialiser,
     TypeSerialiser,
     URISerialiser
   )
@@ -106,14 +107,14 @@ object DependencySerialiser extends CustomSerializer[Dependency](implicit format
   }
 ))
 
-object TypeListSerialiser extends CustomSerializer[Seq[Type]](implicit formats => (
+object TypesSerialiser extends CustomSerializer[Types](implicit formats => (
   {
-    case JArray(types) => types.map(_.extract)
-    case singleType: JString => Seq(singleType.extract)
+    case JArray(types) => Types(types.map(_.extract[Type]).toSet)
+    case singleType: JString => Types(Set(singleType.extract[Type]))
   },
   {
-    case Seq(singleType) => Extraction.decompose(singleType)
-    case types: Seq[Type] => JArray(types.map(Extraction.decompose).toList)
+    case Types(types) if types.size != 1 => JArray(types.toList.map(Extraction.decompose))
+    case Types(types) if types.size == 1 => Extraction.decompose(types.head)
   }
 ))
 
