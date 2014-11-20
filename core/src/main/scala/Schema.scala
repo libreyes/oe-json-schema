@@ -4,7 +4,11 @@ import java.lang.Class
 import java.net.URI
 import org.json4s.JsonAST._
 
-trait Schema
+trait Schema {
+  def refURI: Option[URI] = None
+  def parentSchemaRefs: Seq[URI] = Seq()
+  def isPolymorphic: Boolean = false
+}
 
 case class DraftV4Schema(
   coreAttributes: CoreAttributes = CoreAttributes(),
@@ -14,7 +18,10 @@ case class DraftV4Schema(
   objectValidation: ObjectValidation = ObjectValidation(),
   generalValidation: GeneralValidation = GeneralValidation(),
   metadata: Metadata = Metadata()
-) extends Schema
+) extends Schema {
+  override def refURI = coreAttributes.$ref
+  override def parentSchemaRefs = generalValidation.allOf.map(s => s.flatMap (_.refURI)).getOrElse(Seq())
+}
 
 case class CoreAttributes(
   $schema: Option[URI] = None,
