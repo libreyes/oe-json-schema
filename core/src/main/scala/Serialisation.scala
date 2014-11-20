@@ -20,10 +20,10 @@ object Serialisation {
     override val strict = true
   } ++ Serialisers + GeneralValidationSerialiser
 
-  implicit lazy val Formats = BaseFormats + new SchemaSerialiser[DraftV4Schema]
+  implicit lazy val Formats = BaseFormats + new SchemaSerialiser(classOf[DraftV4Schema])
 }
 
-class SchemaSerialiser[T <: Schema : Manifest] extends CustomSerializer[Schema](implicit formats => (
+class SchemaSerialiser[T <: Schema : Manifest](c: Class[T]) extends CustomSerializer[Schema](implicit formats => (
   { case json: JObject => json.extract[T] },
   PartialFunction.empty
 ))
