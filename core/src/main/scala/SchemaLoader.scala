@@ -2,7 +2,7 @@ package uk.org.openeyes.jsonschema.core
 
 import java.io.{File,FileReader,Reader}
 
-class SchemaLoader(deserialiser: (Reader => Schema)) {
+class SchemaLoader[T <: Schema](deserialiser: (Reader => T)) {
   def loadFromDir(uriScheme: String, path: String) = {
     val root = new File(path)
     val rootLen = root.getAbsolutePath.length
