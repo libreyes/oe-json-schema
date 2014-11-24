@@ -78,13 +78,13 @@ case class ObjectValidation(
 )
 
 sealed abstract class Type
-case object TArray extends Type
-case object TBoolean extends Type
-case object TInteger extends Type
-case object TNumber extends Type
-case object TNull extends Type
-case object TObject extends Type
-case object TString extends Type
+case object TArray extends Type { override def toString = "array" }
+case object TBoolean extends Type { override def toString = "boolean" }
+case object TInteger extends Type { override def toString = "integer" }
+case object TNumber extends Type { override def toString = "number" }
+case object TNull extends Type { override def toString = "null" }
+case object TObject extends Type { override def toString = "object" }
+case object TString extends Type { override def toString = "string" }
 
 case class Types(types: Set[Type])
 

@@ -130,13 +130,7 @@ object TypeSerialiser extends CustomSerializer[Type](formats => (
     case JString("string") => TString
   },
   {
-    case TArray => JString("array")
-    case TBoolean => JString("boolean")
-    case TInteger => JString("integer")
-    case TNumber => JString("number")
-    case TNull => JString("null")
-    case TObject => JString("object")
-    case TString => JString("string")
+    case t: Type => JString(t.toString)
   }
 ))
 
