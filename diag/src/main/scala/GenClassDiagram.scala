@@ -1,5 +1,6 @@
 package uk.org.openeyes.jsonschema.diag
 
+import org.json4s.native.JsonMethods
 import org.json4s.native.Serialization
 import uk.org.openeyes.jsonschema.core._
 import uk.org.openeyes.jsonschema.core.Serialisation.Formats
@@ -14,7 +15,7 @@ object GenClassDiagram {
 
     val (schemaDir, outputFile) = (args(0), args(1))
 
-    val schema = new SchemaLoader(Serialization.read[DraftV4Schema](_)).loadFromDir(schemaDir)
+    val schema = new SchemaLoader(JsonMethods.parse, _.extract[DraftV4Schema]).loadFromDir(schemaDir)
 
     val (nodes, inheritEdges) = schema.generalValidation.definitions.getOrElse(Seq()).map {
       case (name, schema) => (Node(name, "label" -> genLabel(name, schema)), schema.parentSchemaRefs.map(uri => Edge(uri.getSchemeSpecificPart -> name)))

@@ -1,8 +1,9 @@
 package uk.org.openeyes.jsonschema.core
 
+import org.json4s._
 import java.io.{File,FileReader,Reader}
 
-class SchemaLoader(deserialiser: (Reader => Schema)) {
+class SchemaLoader(parse: (JsonInput, Boolean) => JValue, extract: JValue => Schema) {
   def loadFromDir(path: String) = {
     val root = new File(path)
     val rootLen = root.getAbsolutePath.length
@@ -11,7 +12,7 @@ class SchemaLoader(deserialiser: (Reader => Schema)) {
       generalValidation = GeneralValidation(
         definitions = Some(
           findFiles(root).map(f => {
-            f.getAbsolutePath.substring(rootLen + 1).replaceAll("""\.json$""", "").replaceAll("/", ".") -> deserialiser(new java.io.FileReader(f))
+            f.getAbsolutePath.substring(rootLen + 1).replaceAll("""\.json$""", "").replaceAll("/", ".") -> loadSchema(new java.io.FileReader(f))
           }).toMap
         )
       )
@@ -24,5 +25,9 @@ class SchemaLoader(deserialiser: (Reader => Schema)) {
         files.filter(_.getPath().matches(""".*\.json""")) ++
         dirs.filter(!_.getPath().matches("""\..*""")).flatMap(findFiles)
     }
+  }
+
+  private def loadSchema(r: Reader) = {
+    extract(parse(r, true))
   }
 }
