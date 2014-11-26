@@ -1,5 +1,6 @@
 package uk.org.openeyes.jsonschema.diag
 
+import java.net.URI
 import org.json4s.native.JsonMethods
 import org.json4s.native.Serialization
 import uk.org.openeyes.jsonschema.core._
@@ -18,7 +19,7 @@ object GenClassDiagram {
     val schema = new SchemaLoader(JsonMethods.parse, _.extract[DraftV4Schema]).loadFromDir(schemaDir)
 
     val (nodes, inheritEdges) = schema.generalValidation.definitions.getOrElse(Seq()).map {
-      case (name, schema) => (Node(name, "label" -> genLabel(name, schema)), schema.parentSchemaRefs.map(uri => Edge(uri.getSchemeSpecificPart -> name)))
+      case (name, schema) => (Node(name, "label" -> genLabel(name, schema)), schema.parentSchemaRefs.map(uri => Edge(basename(uri) -> name)))
     }.toSeq.unzip
 
     val graph = Graph()(NodeSet("shape" -> "record")(nodes))(EdgeSet("dir" -> "back", "arrowtail" -> "empty")(inheritEdges.flatten))
@@ -36,7 +37,7 @@ object GenClassDiagram {
   }
 
   private def genTypesString(schema: Schema) = schema match {
-    case SchemaRef(uri) => uri.getSchemeSpecificPart
+    case SchemaRef(uri) => basename(uri)
     case schema: DraftV4Schema => schema.generalValidation.types.fold("?")(_.types.map(genTypeString(schema, _)).mkString("\\|"))
   }
 
@@ -51,4 +52,6 @@ object GenClassDiagram {
       t.toString
     }
   }
+
+  private def basename(uri: URI) = uri.toString.split("[#/]").last
 }

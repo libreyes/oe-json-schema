@@ -1,5 +1,6 @@
 package uk.org.openeyes.jsonschema.core
 
+import java.net.URI
 import org.json4s._
 import java.io.{File,FileReader,Reader}
 
@@ -28,6 +29,10 @@ class SchemaLoader(parse: (JsonInput, Boolean) => JValue, extract: JValue => Sch
   }
 
   private def loadSchema(r: Reader) = {
-    extract(parse(r, true))
+    extract(Transform.transformRefs(parse(r, true), convertRef))
+  }
+
+  private def convertRef(uri: URI) = {
+    new URI("#definitions/" + uri.getSchemeSpecificPart + Option(uri.getFragment).fold("")("/" + _))
   }
 }
