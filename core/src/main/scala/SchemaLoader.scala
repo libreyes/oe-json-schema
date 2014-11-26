@@ -2,16 +2,19 @@ package uk.org.openeyes.jsonschema.core
 
 import java.io.{File,FileReader,Reader}
 
-class SchemaLoader[T <: Schema](deserialiser: (Reader => T)) {
-  def loadFromDir(uriScheme: String, path: String) = {
+class SchemaLoader(deserialiser: (Reader => Schema)) {
+  def loadFromDir(path: String) = {
     val root = new File(path)
     val rootLen = root.getAbsolutePath.length
 
-    new SchemaSet(
-      uriScheme,
-      findFiles(root).map(f => {
-        f.getAbsolutePath.substring(rootLen + 1).replaceAll("""\.json$""", "").replaceAll("/", ".") -> deserialiser(new java.io.FileReader(f))
-      }).toMap
+    DraftV4Schema(
+      generalValidation = GeneralValidation(
+        definitions = Some(
+          findFiles(root).map(f => {
+            f.getAbsolutePath.substring(rootLen + 1).replaceAll("""\.json$""", "").replaceAll("/", ".") -> deserialiser(new java.io.FileReader(f))
+          }).toMap
+        )
+      )
     )
   }
 

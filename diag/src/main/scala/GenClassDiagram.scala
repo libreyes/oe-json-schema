@@ -8,16 +8,19 @@ import GraphViz._
 
 object GenClassDiagram {
   def main(args: Array[String]) = {
-    if (args.length != 3) {
-      throw new IllegalArgumentException("Usage: " + getClass() + " <uri scheme> <schema dir> <output filename>")
+    if (args.length != 2) {
+      throw new IllegalArgumentException("Usage: " + getClass() + " <schema dir> <output filename>")
     }
 
-    val schemaSet = new SchemaLoader(Serialization.read[DraftV4Schema](_)).loadFromDir(args(0), args(1))
+    val (schemaDir, outputFile) = (args(0), args(1))
 
-    def genLabel(name: String, schema: DraftV4Schema) = {
-      "{" + name + "|" + schema.objectValidation.properties.fold("")(_.foldRight(""){
-        case ((name, schema), acc) => name + ": " + genTypesString(schema) +  "\\l" + acc
-      }) + "}"
+    val schema = new SchemaLoader(Serialization.read[DraftV4Schema](_)).loadFromDir(schemaDir)
+
+    def genLabel(name: String, schema: Schema) = schema match {
+      case schema: DraftV4Schema =>
+        "{" + name + "|" + schema.objectValidation.properties.fold("")(_.foldRight(""){
+          case ((name, schema), acc) => name + ": " + genTypesString(schema) +  "\\l" + acc
+        }) + "}"
     }
 
     def genTypesString(schema: Schema) = schema match {
@@ -37,13 +40,13 @@ object GenClassDiagram {
       }
     }
 
-    val (nodes, inheritEdges) = schemaSet.schemas.map {
+    val (nodes, inheritEdges) = schema.generalValidation.definitions.getOrElse(Seq()).map {
       case (name, schema) => (Node(name, "label" -> genLabel(name, schema)), schema.parentSchemaRefs.map(uri => Edge(uri.getSchemeSpecificPart -> name)))
     }.toSeq.unzip
 
     val graph = Graph()(NodeSet("shape" -> "record")(nodes))(EdgeSet("dir" -> "back", "arrowtail" -> "empty")(inheritEdges.flatten))
 
-    val w = new java.io.FileWriter(args(2))
+    val w = new java.io.FileWriter(outputFile)
     graph.format(w)
     w.close
   }
