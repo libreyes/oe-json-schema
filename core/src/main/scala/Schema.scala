@@ -17,7 +17,8 @@ case class DraftV4Schema(
   arrayValidation: ArrayValidation = ArrayValidation(),
   objectValidation: ObjectValidation = ObjectValidation(),
   generalValidation: GeneralValidation = GeneralValidation(),
-  metadata: Metadata = Metadata()
+  metadata: Metadata = Metadata(),
+  hyperSchemaAttributes: HyperSchemaAttributes = HyperSchemaAttributes()
 ) extends Schema {
   override def refURI = coreAttributes.$ref
   override def parentSchemaRefs = generalValidation.allOf.map(s => s.flatMap (_.refURI)).getOrElse(Seq())
@@ -102,6 +103,29 @@ case class Metadata(
   title: Option[String] = None,
   description: Option[String] = None,
   default: Option[JValueWrapper] = None
+)
+
+case class LinkDescriptionObject(
+  href: String,
+  rel: String,
+  title: Option[String] = None,
+  targetSchema: Option[Schema] = None,
+  mediaType: Option[String] = None,
+  method: Option[String] = None,
+  schema: Option[Schema] = None
+)
+
+case class Media(
+  binaryEncoding: Option[String] = None,
+  mediaType: Option[String] = None
+)
+
+case class HyperSchemaAttributes(
+  links: Seq[LinkDescriptionObject] = Seq(),
+  fragmentResolution: Option[String] = None,
+  media: Option[Media] = None,
+  readOnly: Option[Boolean] = None,
+  pathStart: Option[URI] = None
 )
 
 case class JValueWrapper(value: JValue)

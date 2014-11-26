@@ -21,7 +21,17 @@ object SchemaGen {
       objectValidation <- genObjectValidation
       generalValidation <- genGeneralValidation
       metadata <- genMetadata
-    } yield DraftV4Schema(coreAttributes, numericValidation, stringValidation, arrayValidation, objectValidation, generalValidation, metadata)
+      hyperSchemaAttributes <- genHyperSchemaAttributes
+    } yield DraftV4Schema(
+      coreAttributes,
+      numericValidation,
+      stringValidation,
+      arrayValidation,
+      objectValidation,
+      generalValidation,
+      metadata,
+      hyperSchemaAttributes
+    )
 
     lazy val empty = const(DraftV4Schema())
 
@@ -91,6 +101,31 @@ object SchemaGen {
     description <- unlikelyOption(alphaStr)
     default <- unlikelyOption(genJValue)
   } yield Metadata(title, description, default)
+
+  def genHyperSchemaAttributes(implicit arbSchema: Arbitrary[Schema]) = {
+    for {
+      links <- frequency(4 -> Seq(), 1 -> resize(4, listOf(genLdo)))
+      fr <- unlikelyOption(resize(16, alphaStr))
+      media <- unlikelyOption(for {
+        be <- unlikelyOption(resize(16, alphaStr))
+        mt <- unlikelyOption(resize(16, alphaStr))
+      } yield Media(be, mt))
+      ro <- unlikelyOption(arbitrary[Boolean])
+      ps <- unlikelyOption(genURI)
+    } yield HyperSchemaAttributes(links, fr, media, ro, ps)
+  }
+
+  def genLdo(implicit arbSchema: Arbitrary[Schema]) = {
+    for {
+      href <- resize(16, alphaStr)
+      rel <- resize(16, alphaStr)
+      title <- unlikelyOption(resize(16, alphaStr))
+      targetSchema <- unlikelyOption(arbitrary[Schema])
+      mediaType <- unlikelyOption(resize(16, alphaStr))
+      method <- unlikelyOption(resize(4, alphaStr))
+      schema <- unlikelyOption(arbitrary[Schema])
+    } yield LinkDescriptionObject(href, rel, title, targetSchema, mediaType, method, schema)
+  }
 
   lazy val genURI = for {
     scheme <-  resize(4, alphaStr) suchThat (_.length > 0)

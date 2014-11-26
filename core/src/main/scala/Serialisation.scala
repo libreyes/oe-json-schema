@@ -18,7 +18,7 @@ object Serialisation {
   lazy val BaseFormats = new DefaultFormats {
     override val wantsBigDecimal = true
     override val strict = true
-  } ++ Serialisers + GeneralValidationSerialiser
+  } ++ Serialisers + GeneralValidationSerialiser + MediaSerialiser + HyperSchemaAttributesSerialiser
 
   implicit lazy val Formats = BaseFormats + new SchemaSerialiser(classOf[DraftV4Schema])
 }
@@ -38,7 +38,8 @@ object DraftV4Serialiser extends CustomSerializer[DraftV4Schema](implicit format
         json.extract[ArrayValidation],
         json.extract[ObjectValidation],
         json.extract[GeneralValidation],
-        json.extract[Metadata]
+        json.extract[Metadata],
+        json.extract[HyperSchemaAttributes]
       )
     }
   },
@@ -50,7 +51,8 @@ object DraftV4Serialiser extends CustomSerializer[DraftV4Schema](implicit format
       Extraction.decompose(schema.arrayValidation) merge
       Extraction.decompose(schema.objectValidation) merge
       Extraction.decompose(schema.generalValidation) merge
-      Extraction.decompose(schema.metadata)
+      Extraction.decompose(schema.metadata) merge
+      Extraction.decompose(schema.hyperSchemaAttributes)
     }
   }
 ))
@@ -142,4 +144,13 @@ object URISerialiser extends CustomSerializer[URI](formats => (
 object GeneralValidationSerialiser extends FieldSerializer[GeneralValidation](
   FieldSerializer.renameTo("types", "type"),
   FieldSerializer.renameFrom("type", "types")
+)
+
+object MediaSerialiser extends FieldSerializer[Media](
+  FieldSerializer.renameTo("mediaType", "type"),
+  FieldSerializer.renameFrom("type", "mediaType")
+)
+
+object HyperSchemaAttributesSerialiser extends FieldSerializer[HyperSchemaAttributes](
+  serializer = { case ("links", Seq()) => None }
 )
