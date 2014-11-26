@@ -16,22 +16,21 @@ object GenClassDiagram {
 
     def genLabel(name: String, schema: DraftV4Schema) = {
       "{" + name + "|" + schema.objectValidation.properties.fold("")(_.foldRight(""){
-        case ((name, schema: DraftV4Schema), acc) => name + ": " + genTypesString(schema) +  "\\l" + acc
+        case ((name, schema), acc) => name + ": " + genTypesString(schema) +  "\\l" + acc
       }) + "}"
     }
 
-    def genTypesString(schema: DraftV4Schema) = {
-      schema.refURI.map(_.getSchemeSpecificPart)
-        .orElse(schema.generalValidation.types.map(_.types.map(genTypeString(schema, _)).mkString("\\|")))
-        .getOrElse("?")
+    def genTypesString(schema: Schema) = schema match {
+      case SchemaRef(uri) => uri.getSchemeSpecificPart
+      case schema: DraftV4Schema => schema.generalValidation.types.fold("?")(_.types.map(genTypeString(schema, _)).mkString("\\|"))
     }
 
     def genTypeString(schema: DraftV4Schema, t: Type): String = {
       if (t == TArray) {
         schema.arrayValidation.items match {
-          case Some(ItemsSchema(itemSchema: DraftV4Schema)) => genTypesString(itemSchema) + " [" + schema.arrayValidation.minItems.getOrElse(0) + ".." + schema.arrayValidation.maxItems.getOrElse("*") + "]"
+          case Some(ItemsSchema(itemSchema)) => genTypesString(itemSchema) + " [" + schema.arrayValidation.minItems.getOrElse(0) + ".." + schema.arrayValidation.maxItems.getOrElse("*") + "]"
           case Some(ItemsSchemaList(itemSchemas)) => throw new Exception("TODO")
-          case _ => throw new Exception("No array validation defined for schema with type array: " + schema)
+          case _ => throw new Exception("No array validation defined for schema with type array:\n" + Serialization.writePretty(schema))
         }
       } else {
         t.toString

@@ -13,7 +13,7 @@ object SchemaGen {
   def genSchema(level: Int = 0): Gen[Schema] = {
     implicit lazy val arbSchema = Arbitrary(genSchema(level + 1))
 
-    lazy val nonEmpty = for {
+    lazy val schema = for {
       coreAttributes <- genCoreAttributes
       numericValidation <- genNumericValidation
       stringValidation <- genStringValidation
@@ -33,21 +33,22 @@ object SchemaGen {
       hyperSchemaAttributes
     )
 
-    lazy val empty = const(DraftV4Schema())
+    lazy val ref = for {
+      uri <- genURI
+    } yield SchemaRef(uri)
 
     level match {
-      case 0 => nonEmpty
-      case 1 => oneOf(nonEmpty, empty)
-      case 2 => frequency((1, nonEmpty), (2, empty))
-      case _ => empty
+      case 0 => schema
+      case 1 => oneOf(schema, ref)
+      case 2 => frequency(1 -> schema, 2 -> ref)
+      case _ => ref
     }
   }
 
   lazy val genCoreAttributes = for {
     $schema <- unlikelyOption(genURI)
     id <- unlikelyOption(genURI)
-    $ref <- unlikelyOption(genURI)
-  } yield CoreAttributes($schema, id, $ref)
+  } yield CoreAttributes($schema, id)
 
   lazy val genNumericValidation = for {
     multipleOf <- unlikelyOption(genNumber)
@@ -128,8 +129,8 @@ object SchemaGen {
   }
 
   lazy val genURI = for {
-    scheme <-  resize(4, alphaStr) suchThat (_.length > 0)
-    ssp <- resize(16, alphaStr) suchThat (_.length > 0)
+    scheme <-  resize(4, alphaStr) retryUntil (_.length > 0)
+    ssp <- resize(16, alphaStr) retryUntil (_.length > 0)
     fragment <- resize(16, alphaStr)
   } yield new java.net.URI(scheme, ssp, fragment)
 

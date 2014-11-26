@@ -24,7 +24,11 @@ object Serialisation {
 }
 
 class SchemaSerialiser[T <: Schema : Manifest](c: Class[T]) extends CustomSerializer[Schema](implicit formats => (
-  { case json: JObject => json.extract[T] },
+  {
+    case json: JObject => {
+      if (json.values.contains("$ref")) json.extract[SchemaRef] else json.extract[T]
+    }
+  },
   PartialFunction.empty
 ))
 
