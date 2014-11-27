@@ -7,6 +7,8 @@ import java.io.{File,FileReader,Reader}
 class SchemaLoader(parse: (JsonInput, Boolean) => JValue, extract: JValue => Schema) {
   def loadFromDir(path: String) = {
     val root = new File(path)
+    if (!root.isDirectory) throw new IllegalArgumentException("Path '" + path + "' is not a directory")
+
     val rootLen = root.getAbsolutePath.length
 
     DraftV4Schema(
@@ -21,7 +23,7 @@ class SchemaLoader(parse: (JsonInput, Boolean) => JValue, extract: JValue => Sch
   }
 
   private def findFiles(base: File): Seq[File] = {
-    base.listFiles.partition(_.isDirectory) match {
+    Option[Array[File]](base.listFiles).getOrElse(Array()).partition(_.isDirectory) match {
       case (dirs, files) =>
         files.filter(_.getPath().matches(""".*\.json""")) ++
         dirs.filter(!_.getPath().matches("""\..*""")).flatMap(findFiles)
