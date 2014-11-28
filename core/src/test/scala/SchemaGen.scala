@@ -148,7 +148,7 @@ object SchemaGen {
 
   lazy val genRegex = resize(16, alphaStr)  // FIXME
 
-  lazy val genJValue: Gen[JValueWrapper] = oneOf(const(JNull), resultOf(JBool), resultOf(JInt)).map(JValueWrapper(_))
+  lazy val genJValue: Gen[JValue] = oneOf(const(JNull), resultOf(JBool), resultOf(JInt))
 
   def unlikelyOption[T](g: Gen[T]) = {
     frequency((1, g.map(Some.apply)), (3, const(None)))

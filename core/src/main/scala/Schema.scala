@@ -89,7 +89,7 @@ case object TString extends Type { override def toString = "string" }
 case class Types(types: Set[Type])
 
 case class GeneralValidation(
-  enum: Option[Seq[JValueWrapper]] = None,
+  enum: Option[Seq[JValue]] = None,
   types: Option[Types] = None,
   allOf: Option[Seq[Schema]] = None,
   anyOf: Option[Seq[Schema]] = None,
@@ -101,7 +101,7 @@ case class GeneralValidation(
 case class Metadata(
   title: Option[String] = None,
   description: Option[String] = None,
-  default: Option[JValueWrapper] = None
+  default: Option[JValue] = None
 )
 
 case class LinkDescriptionObject(
@@ -126,5 +126,3 @@ case class HyperSchemaAttributes(
   readOnly: Option[Boolean] = None,
   pathStart: Option[URI] = None
 )
-
-case class JValueWrapper(value: JValue)

@@ -12,7 +12,8 @@ object Serialisation {
     DependencySerialiser,
     TypesSerialiser,
     TypeSerialiser,
-    URISerialiser
+    URISerialiser,
+    OptionJValueSerialiser
   )
 
   lazy val BaseFormats = new DefaultFormats {
@@ -144,6 +145,25 @@ object URISerialiser extends CustomSerializer[URI](formats => (
   { case JString(str) => new URI(str) },
   { case uri: URI => new JString(uri.toString) }
 ))
+
+object OptionJValueSerialiser extends Serializer[Option[JValue]] {
+  val Class = scala.reflect.classTag[Option[JValue]].runtimeClass
+
+  def deserialize(implicit format: Formats) = {
+    case (TypeInfo(Class, Some(pt)), jv) if {
+      val ata = pt.getActualTypeArguments
+      ata.length == 1 && ata(0) == classOf[JValue]
+    } => jv match {
+      case JNothing => None
+      case jv => Some(jv)
+    }
+  }
+
+  def serialize(implicit format: Formats) = {
+    case Some(jv: JValue) => jv
+    case None => JNothing
+  }
+}
 
 object GeneralValidationSerialiser extends FieldSerializer[GeneralValidation](
   FieldSerializer.renameTo("types", "type"),
