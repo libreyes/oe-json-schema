@@ -35,6 +35,6 @@ class SchemaLoader(parse: (JsonInput, Boolean) => JValue, extract: JValue => Sch
   }
 
   private def convertRef(uri: URI) = {
-    new URI("#definitions/" + uri.getSchemeSpecificPart + Option(uri.getFragment).fold("")("/" + _))
+    new URI("#/definitions/" + uri.getSchemeSpecificPart + Option(uri.getFragment).fold("")("/" + _))
   }
 }
