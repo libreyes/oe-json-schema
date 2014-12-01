@@ -1,4 +1,4 @@
-package uk.org.openeyes.jsonschema.diag
+package uk.org.openeyes.jsonschema.doc
 
 import java.net.URI
 import org.json4s.native.JsonMethods

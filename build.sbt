@@ -22,10 +22,10 @@ lazy val core = project.in(file("core")).
     )
   )
 
-lazy val diag = project.in(file("diag")).
+lazy val doc = project.in(file("doc")).
   dependsOn("core").
   settings(
-    name := "oe-json-schema-diag",
+    name := "oe-json-schema-doc",
     libraryDependencies ++= Seq(
       "org.json4s" %% "json4s-native" % "3.2.11"
     )
