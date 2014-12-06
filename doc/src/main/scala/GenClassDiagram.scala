@@ -1,10 +1,10 @@
 package uk.org.openeyes.jsonschema.doc
 
 import java.net.URI
+import org.json4s.JsonAST._
 import org.json4s.native.JsonMethods
-import org.json4s.native.Serialization
 import uk.org.openeyes.jsonschema.core._
-import uk.org.openeyes.jsonschema.core.Serialisation.Formats
+import uk.org.openeyes.jsonschema.core.DraftV4Schema._
 
 import GraphViz._
 
@@ -16,10 +16,10 @@ object GenClassDiagram {
 
     val (schemaDir, outputFile) = (args(0), args(1))
 
-    val schema = new SchemaLoader(JsonMethods.parse, _.extract[DraftV4Schema]).loadFromDir(schemaDir)
+    val schemas = new SchemaLoader(JsonMethods.parse).loadFromDir(schemaDir)
 
-    val (nodes, inheritEdges) = schema.generalValidation.definitions.getOrElse(Seq()).map {
-      case (name, schema) => (Node(name, "label" -> genLabel(name, schema)), schema.parentSchemaRefs.map(uri => Edge(basename(uri) -> name)))
+    val (nodes, inheritEdges) = schemas.map {
+      case (name, schema) => (Node(name, "label" -> genLabel(name, schema)), parentSchemaRefs(schema).map(uri => Edge(basename(uri) -> name)))
     }.toSeq.unzip
 
     val graph = Graph()(NodeSet("shape" -> "record")(nodes))(EdgeSet("dir" -> "back", "arrowtail" -> "empty")(inheritEdges.flatten))
@@ -29,24 +29,23 @@ object GenClassDiagram {
     w.close
   }
 
-  private def genLabel(name: String, schema: Schema) = schema match {
-    case schema: DraftV4Schema =>
-      "{" + name + "|" + schema.objectValidation.properties.fold("")(_.foldRight(""){
-        case ((name, schema), acc) => name + ": " + genTypesString(schema) +  "\\l" + acc
-      }) + "}"
+  private def genLabel(name: String, schema: JValue) = {
+    "{" + name + "|" + properties(schema).foldRight(""){
+      case ((name, schema), acc) => name + ": " + genTypesString(schema) +  "\\l" + acc
+    } + "}"
   }
 
-  private def genTypesString(schema: Schema) = schema match {
-    case SchemaRef(uri) => basename(uri)
-    case schema: DraftV4Schema => schema.generalValidation.types.fold("?")(_.types.map(genTypeString(schema, _)).mkString("\\|"))
+  private def genTypesString(schema: JValue) = schema match {
+    case JsonRef(uri) => basename(uri)
+    case schema => allowedTypes(schema).map(genTypeString(schema, _)).mkString("\\|")
   }
 
-  private def genTypeString(schema: DraftV4Schema, t: Type): String = {
+  private def genTypeString(schema: JValue, t: Type): String = {
     if (t == TArray) {
-      schema.arrayValidation.items match {
-        case Some(ItemsSchema(itemSchema)) => genTypesString(itemSchema) + " [" + schema.arrayValidation.minItems.getOrElse(0) + ".." + schema.arrayValidation.maxItems.getOrElse("*") + "]"
-        case Some(ItemsSchemaList(itemSchemas)) => throw new Exception("TODO")
-        case _ => throw new Exception("No array validation defined for schema with type array:\n" + Serialization.writePretty(schema))
+      (schema \ "items") match {
+        case itemSchema: JObject => genTypesString(itemSchema) + " [" + minItems(schema) + ".." + maxItems(schema).getOrElse("*") + "]"
+        case JArray(itemSchemas) => "(" + itemSchemas.map(genTypesString(_)).mkString(", ") + ")"
+        case _ => t.toString
       }
     } else {
       t.toString
